@@ -10,20 +10,16 @@ use std::println;
 use clap::value_parser;
 use clap::command;
 use clap::arg;
-use clap::Arg;
-use clap::ArgAction;
 use lazy_static::lazy_static;
-use regex::Regex;
 
 lazy_static! {
     static ref MATCHES: clap::ArgMatches = {
         command!()
-            .arg(arg!(-r --recursive))
-            .arg(Arg::new("depth").short('d').long("depth").requires("recursive").value_parser(value_parser!(usize)))
-            .arg(Arg::new("show_files").short('f').long("show-files").action(ArgAction::SetTrue))
-            .arg(Arg::new("show_symlinks").short('s').long("show-symlinks").action(ArgAction::SetTrue))
-            .arg(arg!(-p --path <PATH>))
-            .arg(arg!(-m --matches <REGEX>))
+            .arg(arg!(-p --path <PATH> "The path at which to start. If unspecified, the current directory is used."))
+            .arg(arg!(-r --recursive "Enables recursion"))
+            .arg(arg!(-d --depth <DEPTH> "The depth to which to recurse. If unspecified, the depth is unlimited.").requires("recursive").value_parser(value_parser!(usize)))
+            .arg(arg!(show_files: -f --"show-files" "Displays files along with directories"))
+            .arg(arg!(show_symlinks: -s --"show-symlinks" "Displays symlinks along with directories"))
             .get_matches()
     };
     static ref RECURSIVE: bool = *MATCHES.get_one::<bool>("recursive").unwrap();
@@ -35,8 +31,6 @@ lazy_static! {
     static ref ROOT: PathBuf = PathBuf::from(MATCHES.get_one::<String>("path").unwrap_or(
         &current_dir().unwrap().into_os_string().into_string().unwrap())
     );
-    static ref PATTERN: Option<Regex> = MATCHES.get_one::<String>("matches").map(|pat| Regex::new(&pat).expect("Regex error"));
-
 }
 
 fn main() {
